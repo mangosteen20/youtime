@@ -31,8 +31,9 @@ function accum_time() {
     var curD = new Date();
     console.log("accum_time called");
 
-
-    if (ytplayer.className.includes("playing-mode") && !prev_play) {
+    if (ytplayer.className.includes("ad-showing")) {
+        return;
+    } else if (ytplayer.className.includes("playing-mode") && !prev_play) {
         last_marked = curD.getTime();
         prev_play = true;
         console.log("just played, marks time");
