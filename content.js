@@ -142,6 +142,7 @@ function check_state() {
         var curD = new Date();
         if (prev_play) {
             accum += curD.getTime() - last_marked;
+            period += curD.getTime() - last_marked;
         }
         accum /= 1000;
         chrome.storage.sync.set({"time": accum}, function() {
