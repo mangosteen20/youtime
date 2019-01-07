@@ -4,6 +4,7 @@ var last_marked = d.getTime();
 var title_hold = null;
 var cat_hold = null;
 var cat_id = null;
+var period = 0;
 
 var max_id = null;
 chrome.storage.sync.get(['max_id'], function(data) {
@@ -73,11 +74,15 @@ chrome.storage.sync.get(['time'], function(data) {
         var curD = new Date();
         if (prev_play) {
             accum += curD.getTime() - last_marked;
+            period += curD.getTime() - last_marked;
         }
         accum /= 1000;
         chrome.storage.sync.set({"time": accum}, function() {
             console.log("update.");
         });
+
+        updateCatTime(cat_hold, cat_id, period/1000);
+
         clearInterval(accum_interv);
         clearInterval(check_state);
     });
@@ -108,6 +113,8 @@ function accum_time() {
     } else if (ytplayer.className.includes("paused-mode")) {
         if (prev_play) {
             accum += curD.getTime() - last_marked;
+            period += curD.getTime() - last_marked;
+
             last_marked = curD.getTime();
             prev_play = false;
             console.log("just paused, marks time.")
@@ -117,6 +124,7 @@ function accum_time() {
     }
 
     console.log("Total time is ", accum/1000);
+    console.log("Watch time for this one: ", period/1000);
     console.log("Current title: ", title_hold);
     console.log("Current category: ", cat_hold);
 }
@@ -129,7 +137,7 @@ function check_state() {
     if (title_cur) {
         title_hold = title_cur.textContent;
     }
-    if (prev_title != title_hold) {
+    if (prev_title != title_hold) {  //Change to another video
         console.log("Video changed. From " + prev_title + " To " + title_hold);
         var curD = new Date();
         if (prev_play) {
@@ -140,6 +148,9 @@ function check_state() {
             console.log("update.");
         });
 
+        updateCatTime(cat_hold, cat_id, period/1000);
+        period = 0;
+
         d = new Date();
         last_marked = d.getTime();
         record_title();
@@ -149,7 +160,20 @@ function check_state() {
     }
 }
 
+function updateCatTime(the_name, the_id, watch_time) {
+    var xhr = createCORSRequest("PUT", "http://localhost:8080/categories/"+the_id);
 
+    xhr.onload = function() {
+     console.log("send!!");
+     console.log(xhr.response);
+     // process the response.
+    };
+
+    var cat_obj = {"name": the_name, "time": watch_time};
+    var cat_json = JSON.stringify(cat_obj);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(cat_json);
+}
 
 
 function createCORSRequest(method, url) {
@@ -164,14 +188,3 @@ function createCORSRequest(method, url) {
   }
   return xhr;
 }
-
-var xhr = createCORSRequest("PUT", "http://localhost:8080/categories/1");
-
-xhr.onload = function() {
- console.log("send!!");
- console.log(xhr.response);
- // process the response.
-};
-
-xhr.setRequestHeader("Content-Type", "application/json");
-xhr.send('{"name": "Entertain", "freq": 133}');
