@@ -2,7 +2,10 @@
   "name": "youtime",
   "version": "0.1",
   "description": "Monitor youtube watch time.",
-  "permissions": ["storage"],
+  "permissions": [
+      "storage",
+      "http://localhost/*"
+  ],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
