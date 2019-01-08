@@ -26,7 +26,7 @@ function record_category() {
     }, 1000);
 
     var show_timeout = setTimeout(function() {
-        if (more_part.hasAttribute("hidden")) {
+        if (more_part && more_part.hasAttribute("hidden")) {
             console.log("ready to update category");
             cat_hold = document.querySelector("#content > yt-formatted-string > a").textContent;
             chrome.storage.sync.get([cat_hold], function(data) {
@@ -50,7 +50,7 @@ function record_category() {
             console.log("ready to show less", show_button.textContent);
             show_button.click();
         }
-    }, 1000);
+    }, 2000);
 }
 
 function record_title() {
@@ -76,12 +76,13 @@ chrome.storage.sync.get(['time'], function(data) {
             accum += curD.getTime() - last_marked;
             period += curD.getTime() - last_marked;
         }
-        accum /= 1000;
-        chrome.storage.sync.set({"time": accum}, function() {
+        chrome.storage.sync.set({"time": accum/1000}, function() {
             console.log("update.");
         });
 
         updateCatTime(cat_hold, cat_id, period/1000);
+
+        updateTop3();
 
         clearInterval(accum_interv);
         clearInterval(check_state);
@@ -102,7 +103,7 @@ function accum_time() {
     var curD = new Date();
     console.log("accum_time called");
 
-    if (ytplayer.className.includes("ad-showing")) {
+    if (!ytplayer || ytplayer.className.includes("ad-showing")) {
         return;
     } else if (ytplayer.className.includes("playing-mode")) {
         if (!prev_play) {
@@ -137,55 +138,94 @@ function check_state() {
     if (title_cur) {
         title_hold = title_cur.textContent;
     }
-    if (prev_title != title_hold) {  //Change to another video
+    if (prev_title !== title_hold) {  //Change to another video
         console.log("Video changed. From " + prev_title + " To " + title_hold);
         var curD = new Date();
         if (prev_play) {
             accum += curD.getTime() - last_marked;
             period += curD.getTime() - last_marked;
         }
-        accum /= 1000;
-        chrome.storage.sync.set({"time": accum}, function() {
+        chrome.storage.sync.set({"time": accum/1000}, function() {
             console.log("update.");
         });
 
         updateCatTime(cat_hold, cat_id, period/1000);
         period = 0;
 
+        updateTop3();
+
         d = new Date();
         last_marked = d.getTime();
         record_title();
         record_category();
         prev_play = false;
-        accum *= 1000;
     }
 }
 
 function updateCatTime(the_name, the_id, watch_time) {
-    var xhr = createCORSRequest("PUT", "http://localhost:8080/categories/"+the_id);
+    var xhr = createCORSRequest("PUT", "http://localhost:8080/categories/"+the_id, true);
 
     xhr.onload = function() {
-     console.log("send!!");
-     console.log(xhr.response);
-     // process the response.
+        console.log("response!!");
+        console.log(typeof xhr.response);
+        // process the response.
     };
 
     var cat_obj = {"name": the_name, "time": watch_time};
-    var cat_json = JSON.stringify(cat_obj);
+    var cat_jstr = JSON.stringify(cat_obj);
     xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(cat_json);
+    xhr.send(cat_jstr);
+}
+
+function updateTop3() {
+    var xhr = createCORSRequest("GET", "http://localhost:8080/top3", true);
+
+    xhr.onload = function() {
+        console.log("response!!");
+        console.log(typeof xhr.response);
+        // process the response.
+        var cat_obj = JSON.parse(xhr.response);
+        console.log(cat_obj);
+
+        var update_name_l = [];
+        var update_time_l = [];
+
+        var cat_l = cat_obj._embedded.categoryList;
+        cat_l.forEach(function(cat) {
+            if (cat.name === null) {
+                update_name_l.push("N/A");
+                update_time_l.push(-1);
+            } else {
+                update_name_l.push(cat.name);
+                update_time_l.push(cat.time);
+            }
+        });
+        chrome.storage.sync.set({"top3_cat_name": update_name_l}, function() {
+            console.log("update top3_cat_name to ", update_name_l);
+        });
+        chrome.storage.sync.set({"top3_cat_time": update_time_l}, function() {
+            console.log("update top3_cat_time to ", update_time_l);
+        });
+
+    };
+
+    xhr.send();
 }
 
 
-function createCORSRequest(method, url) {
-  var xhr = new XMLHttpRequest();
-  if ("withCredentials" in xhr) {
-    // Check if the XMLHttpRequest object has a "withCredentials" property.
-    xhr.open(method, url, true);
-  } else {
-    // Otherwise, CORS is not supported by the browser.
-    xhr = null;
 
-  }
-  return xhr;
+
+function createCORSRequest(method, url, sync) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+        // Check if the XMLHttpRequest object has a "withCredentials" property.
+        // Since it's Chrome Extension, should get here;
+        xhr.open(method, url, sync);
+    } else {
+        // Otherwise, CORS is not supported by the browser.
+        // If get here, something's wrong.
+        xhr = null;
+        alert("Doesn't support CORS");
+    }
+    return xhr;
 }

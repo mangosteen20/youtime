@@ -15,4 +15,16 @@ chrome.runtime.onInstalled.addListener(function() {
             });
         }
     });
+    chrome.storage.sync.get(["top3_cat_name"], function(data) {
+        chrome.storage.sync.set({"top3_cat_name": []}, function() {
+            console.log("Initialize top3_cat_name.");
+        });
+    });
+
+    chrome.storage.sync.get(["top3_cat_time"], function(data) {
+        chrome.storage.sync.set({"top3_cat_time": []}, function() {
+            console.log("Initialize top3_cat_time.");
+        });
+    });
+
 });
