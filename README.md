@@ -2,6 +2,6 @@
 
 A Chrome Extension that can monitor users' YouTube watch time.
 
-- Record time whenever the user pauses the video, jumps to another video, or leaves current window.
-- Send the record (including watch time and category) to backend each time.
-- Display three longest categories' watch time by requesting data from backend.
+- Records time whenever users pause the video, jump to another video, or leave current window.
+- Sends the record (including watch time and category) to backend each time.
+- Displays three longest categories' watch time by requesting data from backend.
