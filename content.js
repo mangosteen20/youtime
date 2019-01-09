@@ -28,7 +28,11 @@ function record_category() {
     var show_timeout = setTimeout(function() {
         if (more_part && more_part.hasAttribute("hidden")) {
             console.log("ready to update category");
-            cat_hold = document.querySelector("#content > yt-formatted-string > a").textContent;
+            cat_hold = document.querySelector("#content > yt-formatted-string > a");
+            if (!cat_hold) {
+                return;
+            }
+            cat_hold = cat_hold.textContent;
             chrome.storage.sync.get([cat_hold], function(data) {
                 console.log("Print id data: ", data);
                 if(Object.keys(data).length === 0) {
