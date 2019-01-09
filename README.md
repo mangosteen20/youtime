@@ -1,6 +1,6 @@
 # youtime
 
-A Chrome Extension that can monitor users' YouTube watch time.
+A Chrome Extension that can help users monitor YouTube watch time.
 
 - Records time whenever users pause the video, jump to another video, or leave current window.
 - Sends the record (including watch time and category) to backend ([watch_history](https://github.com/mangosteen20/watch_history)) each time.
