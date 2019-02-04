@@ -250,11 +250,11 @@ function updateTop3() {
 function createCORSRequest(method, url, sync) {
     var xhr = new XMLHttpRequest();
     if ("withCredentials" in xhr) {
-        // Since it's Chrome Extension, should get here;
+        // since it's Chrome Extension, should get here;
         xhr.open(method, url, sync);
     } else {
-        // Otherwise, CORS is not supported by the browser.
-        // If get here, something's wrong.
+        // otherwise, CORS is not supported by the browser.
+        // if get here, something's wrong.
         xhr = null;
         alert("Doesn't support CORS");
     }
