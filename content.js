@@ -1,4 +1,4 @@
-//initialize variable
+//initialize useful variables
 var d = new Date();
 var last_marked = d.getTime();
 var title_hold = null;
@@ -11,10 +11,14 @@ chrome.storage.sync.get(['max_id'], function(data) {
     max_id = data.max_id;
 });
 
+/*
+record the category of the video currently played.
+*/
 function record_category() {
     var show_button = null;
     var more_part = null;
 
+    // if the category information is hidden on current page, unfold related block.
     var button_timeout = setTimeout(function() {
         show_button = document.querySelector("#more > yt-formatted-string");
         more_part = document.getElementById("more");
@@ -25,6 +29,7 @@ function record_category() {
         }
     }, 1000);
 
+    // record the category after unfolding. If the category is unseen before, assign a new id.
     var show_timeout = setTimeout(function() {
         if (more_part && more_part.hasAttribute("hidden")) {
             console.log("ready to update category");
@@ -57,6 +62,9 @@ function record_category() {
     }, 2000);
 }
 
+/*
+record the title of the video currently played.
+*/
 function record_title() {
     var title_timeout = setTimeout(function() {
         title_cur = document.querySelector("#container > h1 > yt-formatted-string");
@@ -69,11 +77,20 @@ function record_title() {
 record_category();
 record_title();
 
-var accum = 0;
+
+var accum = 0;  // total watch time for this video in miliseconds.
+
+/*
+retrieve the total watch time since the Extension's setup.
+*/
 chrome.storage.sync.get(['time'], function(data) {
     accum = data.time * 1000;
     console.log("accum is ", accum);
 
+    /*
+    update (in chrome storage) total watch time and category information upon closing the page.
+    also send updated watch time for the category to backend by updateCatTime.
+    */
     window.addEventListener("beforeunload", function(e) {
         var curD = new Date();
         if (prev_play) {
@@ -100,6 +117,9 @@ chrome.storage.sync.get(['time'], function(data) {
 
 var prev_play = false;
 
+/*
+update accum variable whenever the video goes to paused mode.
+*/
 function accum_time() {
     var nD = new Date();
     var nT = nD.getTime();
@@ -136,6 +156,9 @@ function accum_time() {
 
 
 
+/*
+whenever the page displays another video, update relevant state variables
+*/
 function check_state() {
     var prev_title = title_hold;
     title_cur = document.querySelector("#container > h1 > yt-formatted-string");
@@ -166,6 +189,9 @@ function check_state() {
     }
 }
 
+/*
+send updated category's watch time to backend
+*/
 function updateCatTime(the_name, the_id, watch_time) {
     var xhr = createCORSRequest("PUT", "http://localhost:8080/categories/"+the_id, true);
 
@@ -181,6 +207,9 @@ function updateCatTime(the_name, the_id, watch_time) {
     xhr.send(cat_jstr);
 }
 
+/*
+get information of 3 categories watched most from backend
+*/
 function updateTop3() {
     var xhr = createCORSRequest("GET", "http://localhost:8080/top3", true);
 
@@ -218,11 +247,9 @@ function updateTop3() {
 
 
 
-
 function createCORSRequest(method, url, sync) {
     var xhr = new XMLHttpRequest();
     if ("withCredentials" in xhr) {
-        // Check if the XMLHttpRequest object has a "withCredentials" property.
         // Since it's Chrome Extension, should get here;
         xhr.open(method, url, sync);
     } else {

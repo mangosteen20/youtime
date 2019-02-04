@@ -5,6 +5,9 @@ var firstCat = document.getElementById("first_cat");
 var secondCat = document.getElementById("second_cat");
 var thirdCat = document.getElementById("third_cat");
 
+/*
+transform the time format to hour + minute + second
+*/
 function calculateTime(seconds) {
     var total_s = Math.floor(seconds);
     var round_m = Math.floor(total_s/60);
@@ -43,6 +46,7 @@ chrome.storage.sync.get(['top3_cat_time'], function(data) {
 
 console.log("setting timeout");
 
+//display 3 categories with watch time
 setTimeout(function() {
     console.log(name_l);
     console.log(time_l);
